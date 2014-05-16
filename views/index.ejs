@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Checkbook</title>
+
+    <!-- Viewport mobile tag for sensible mobile support -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" type="text/css" href="/styles/bootstrap.min.css">
+  </head>
+
+  <body>
+    <div class="container">
+  <div class="text-center">
+    <h3>Total Balance: <span id="balance"><%= format(total) %></span></h3>
+    <ul class="pagination">
+      <li><a href="/<%= moment(requestedMonth).subtract("months", 1).format("MMMM YYYY") %>">&laquo; <%= moment(requestedMonth).subtract("months", 1).format("MMMM YYYY") %></a></li>
+      <li class="disabled"><a href="#" id="requestedMonth"><%= requestedMonth %></a></li>
+      <% if ( !isCurrentMonth ) { %><li><a href="/<%= moment(requestedMonth).add("months", 1).format("MMMM YYYY") %>"><%= moment(requestedMonth).add("months", 1).format("MMMM YYYY") %> &raquo;</a></li><% } %>
+    </ul>
+
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>amount</th>
+        <th>comment</th>
+        <th>category</th>
+        <th>entered</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+    </tbody>
+
+    <%
+         _.each(entries, function(entry) 
+         {
+           if ( moment(entry.createdAt).format("MMMM YYYY") == requestedMonth )
+           {
+             %>
+            <tr class="<%= (parseFloat(entry.amount)<0?'danger':'success') %>">
+              <td><%= entry.title %></td>
+              <td><%= entry.amount %></td>
+              <td><%= entry.comment %></td>
+              <td><%= entry.category %></td>
+              <td><%= moment(entry.createdAt).format("MMM Do YYYY") %></td>
+              <td><a href="#" id="<%= entry.id %>" class="btn btn-danger delete">X</a></td>
+            </tr>
+    <% } 
+       }); %>
+
+    <tr id="deposit" class="success hide">
+      <form method="POST" action="/create">
+        <td><input type="text" class="form-control" type="text" name="title" placeholder="title"></td>
+        <td><input type="text" class="form-control" type="currency" name="amount" placeholder="0.00"></td>
+        <td><input type="text" class="form-control" type="text" name="comment" placeholder="comment"></td>
+        <td><input type="text" class="form-control" name="category" placeholder="category"></td>
+        <td></td>
+        <td><input type="submit" class="btn btn-primary form-submit" value="Add"></td>
+        <input type="hidden" name="action" value="deposit">
+      </form>
+    </tr>
+
+
+    <tr id="withdraw" class="danger hide">
+      <form method="POST" action="/create">
+        <td><input type="text" class="form-control" type="text" name="title" placeholder="title"></td>
+        <td><input type="text" class="form-control" type="currency" name="amount" placeholder="0.00"></td>
+        <td><input type="text" class="form-control" type="text" name="comment" placeholder="comment"></td>
+        <td><input type="text" class="form-control" name="category" placeholder="category"></td>
+        <td></td>
+        <td><input type="submit" class="btn btn-primary form-submit" value="Add"></td>
+        <input type="hidden" name="action" value="withdraw">
+      </form>
+    </tr>
+  </table>
+  <% if ( requestedMonth == moment().format("MMMM YYYY") ) { %>
+  <div class="btn-group" data-toggle="buttons">
+    <label class="btn btn-danger" id="withdraw_button">
+      <input type="radio" name="options"> Withdraw
+    </label>
+
+    <label class="btn btn-success" id="deposit_button">
+      <input type="radio" name="options" > Deposit
+    </label>
+  </div>
+  <% } %>
+</div>
+    <script type="text/javascript" src="http://code.jquery.com/jquery.min.js"></script>
+    <script type="text/javascript" src="js/custom.js"></script>
+  </body>
+</html>
+
