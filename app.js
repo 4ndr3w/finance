@@ -5,6 +5,8 @@ var express = require("express"),
 	moment = require("moment"),
 	money_math = require("money-math");
 
+process.chdir(__dirname);
+
 app.set("view engine", "ejs");
 app.use(require('skipper')());
 
