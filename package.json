@@ -4,11 +4,14 @@
   "version": "0.0.1",
   "dependencies": {
     "express": "~4.2.0",
-    "mongoose": "3.8.9",
     "ejs": "~1.0.0",
     "underscore": "~1.6.0",
     "moment": "~2.6.0",
     "money-math": "~1.1.0",
-    "skipper": "^0.1.6"
+    "skipper": "^0.1.6",
+    "sequelize": "~1.7.5",
+    "pg": "~3.2.0",
+    "passport": "~0.2.0",
+    "bcrypt": "~0.7.8"
   }
 }

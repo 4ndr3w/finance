@@ -1,14 +1,39 @@
 var express = require("express"),
-    app = express(),
-    Entry = require("./db").Entry,
-	_ = require("underscore"),
-	moment = require("moment"),
-	money_math = require("money-math");
+  app = express(),
+  Entry = require("./db").Entry,
+  _ = require("underscore"),
+  moment = require("moment"),
+  money_math = require("money-math"),
+  passport = require("passport"),
+  LocalStrategy = require('passport-local').Strategy;;
 
 process.chdir(__dirname);
 
 app.set("view engine", "ejs");
 app.use(require('skipper')());
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+    done(null, true);
+  }
+));
+
+passport.serializeUser(function(user, done) {
+  done(null, true);
+});
+
+passport.deserializeUser(function(id, done) {
+  done(null, true);
+});
+
+app.post("/login", passport.authenticate('local', { successRedirect: '/', failureRedirect: '/login' }));
+app.get("/login", function (req, res)
+{
+  res.render("login");
+});
 
 function formatMoney(m)
 {
@@ -19,9 +44,8 @@ function formatMoney(m)
 app.post("/create", function(req,res)
 {
 	req.body.amount = Math.abs(req.param("amount"))*(req.param("action")=="withdraw"?-1:1);
-	
-	var newEntry = new Entry(req.body);
-	newEntry.save(function(err, entry)
+
+	var newEntry = Entry.create(req.body).success(function()
 	{
 		res.redirect("/");
 	});
@@ -31,12 +55,12 @@ app.get("/delete/:id", function(req,res)
 {
 	if ( req.param("id") )
 	{
-		Entry.findById(req.param("id"), function(err, entry)
+		Entry.find({id:req.param("id")}).success(function(entry)
 		{
-			if ( !err && entry && entry.id != undefined )
+			if ( entry && entry.id != undefined )
 			{
 				var redirectTo = moment(entry.createdAt).format("MMMM YYYY");
-				entry.remove(function(err)
+				Entry.destroy({id:req.param("id")}).success(function()
 				{
 					res.redirect("/"+redirectTo);
 				});
@@ -48,29 +72,29 @@ app.get("/delete/:id", function(req,res)
 
 function index(req,res)
 {
-	Entry.find(function(err, entries)
-   	{
-	   var total = 0;
-	   _.each(entries, function(entry)
-	   {
-		   total += entry.amount;
-	   });
+	Entry.all().success(function(entries)
+	{
+		 var total = 0;
+		 _.each(entries, function(entry)
+		 {
+			 total += entry.amount;
+		 });
 
-	   requestedMonth = (req.param("month")?req.param("month"):moment().format("MMMM YYYY"));
-	   res.render("index", {
-		   _: _,
-		   entries: entries, 
-		   total: total, 
-		   format: formatMoney, 
-		   moment:moment, 
-		   requestedMonth: requestedMonth,
-		   isCurrentMonth: requestedMonth==moment().format("MMMM YYYY")
-	   });
-   });
+		 requestedMonth = (req.param("month")?req.param("month"):moment().format("MMMM YYYY"));
+		 res.render("index", {
+			 _: _,
+			 entries: entries,
+			 total: total,
+			 format: formatMoney,
+			 moment:moment,
+			 requestedMonth: requestedMonth,
+			 isCurrentMonth: requestedMonth==moment().format("MMMM YYYY")
+		 });
+	 });
 }
 
 app.get("/:month", index);
 app.get("/", index);
 
 app.use(express.static("assets"));
-app.listen(require("./config").port);
+app.listen(process.env.PORT||8080);
